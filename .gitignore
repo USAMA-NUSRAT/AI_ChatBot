@@ -1,0 +1,9 @@
+# Root-level safety net (each project also has its own .gitignore)
+.env
+.env.*
+!.env.example
+*.log
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
