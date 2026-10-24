@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
+import Documents from './Documents.jsx'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -36,7 +37,10 @@ function App() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail || 'Request failed')
-      setMessages([...history, { role: 'assistant', content: data.reply, provider: data.provider }])
+      setMessages([
+        ...history,
+        { role: 'assistant', content: data.reply, provider: data.provider, sources: data.sources },
+      ])
     } catch (err) {
       setError(err.message)
     } finally {
@@ -53,12 +57,29 @@ function App() {
         </button>
       </header>
 
+      <Documents />
+
       <main className="chat-messages">
-        {messages.length === 0 && <p className="empty">Say hello to start the conversation.</p>}
+        {messages.length === 0 && (
+          <p className="empty">Upload a document, then ask a question about it.</p>
+        )}
         {messages.map((m, i) => (
           <div key={i} className={`message ${m.role}`}>
             <div className="bubble">{m.content}</div>
             {m.provider && <span className="provider">via {m.provider}</span>}
+            {m.sources?.length > 0 && (
+              <details className="sources">
+                <summary>Sources ({m.sources.length})</summary>
+                {m.sources.map((s, j) => (
+                  <div key={j} className="source">
+                    <div className="source-title">
+                      {s.filename} · chunk {s.chunk_index} · {Math.round(s.score * 100)}% match
+                    </div>
+                    <div className="source-text">{s.content}</div>
+                  </div>
+                ))}
+              </details>
+            )}
           </div>
         ))}
         {loading && (

@@ -1,5 +1,9 @@
 fastapi
 uvicorn[standard]
 pydantic-settings
+python-multipart
 anthropic
 google-genai
+asyncpg
+pgvector
+pypdf

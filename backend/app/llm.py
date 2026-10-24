@@ -15,7 +15,7 @@ class ProviderError(Exception):
     pass
 
 
-async def ask_anthropic(messages: list[dict]) -> str:
+async def ask_anthropic(messages: list[dict], system: str) -> str:
     if not settings.anthropic_api_key:
         raise ProviderError("ANTHROPIC_API_KEY is not set")
 
@@ -23,13 +23,13 @@ async def ask_anthropic(messages: list[dict]) -> str:
     response = await client.messages.create(
         model=settings.anthropic_model,
         max_tokens=settings.max_tokens,
-        system=settings.system_prompt,
+        system=system,
         messages=messages,
     )
     return "".join(block.text for block in response.content if block.type == "text")
 
 
-async def ask_gemini(messages: list[dict]) -> str:
+async def ask_gemini(messages: list[dict], system: str) -> str:
     if not settings.gemini_api_key:
         raise ProviderError("GEMINI_API_KEY is not set")
 
@@ -46,19 +46,19 @@ async def ask_gemini(messages: list[dict]) -> str:
         model=settings.gemini_model,
         contents=contents,
         config=genai_types.GenerateContentConfig(
-            system_instruction=settings.system_prompt,
+            system_instruction=system,
             max_output_tokens=settings.max_tokens,
         ),
     )
     return response.text or ""
 
 
-async def chat(messages: list[dict]) -> tuple[str, str]:
+async def chat(messages: list[dict], system: str) -> tuple[str, str]:
     """Return (reply, provider_name). Tries Anthropic first, then Gemini."""
     errors = []
     for name, provider in (("anthropic", ask_anthropic), ("gemini", ask_gemini)):
         try:
-            return await provider(messages), name
+            return await provider(messages, system), name
         except Exception as exc:
             logger.warning("%s failed: %s", name, exc)
             errors.append(f"{name}: {exc}")
